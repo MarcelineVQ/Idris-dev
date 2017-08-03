@@ -7,15 +7,16 @@ env:
   global:
     - PKGNAME=idris
 
-# jobs are explicit, using an expanding matrix seems to distrupt the build order
-# and we won't get our caching done first in that case
 jobs:
   include:
     - stage: prepare cache
       script: true
       addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,hscolour], sources: [hvr-ghc]}}
+    - stage: prepare idris
+      script: cabal install idris
+      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,hscolour], sources: [hvr-ghc]}}
     - stage: test
-      script: cabal new-build
+      script: cabal build
       env:
         - CABALVER="1.24"
         - GHCVER="8.0.1"
@@ -23,7 +24,7 @@ jobs:
         - STYLISH=YES
       addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,hscolour], sources: [hvr-ghc]}}
     - stage: test
-      script: cabal new-build
+      script: cabal build
       env:
         - CABALVER="1.24"
         - GHCVER="8.0.1"
@@ -31,7 +32,7 @@ jobs:
       compiler: ": #GHC 8.0.1"
       addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,cppcheck,hscolour], sources: [hvr-ghc]}}
     - stage: test
-      script: cabal new-build
+      script: cabal build
       env:
         - CABALVER="1.24"
         - GHCVER="8.0.1"
@@ -39,50 +40,14 @@ jobs:
       compiler: ": #GHC 8.0.1"
       addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,cppcheck,hscolour], sources: [hvr-ghc]}}
     - stage: test
-      script: cabal new-build
+      script: cabal build
       env:
         - CABALVER="1.24"
         - GHCVER="8.0.1"
         - TESTS="test_c"
       compiler: ": #GHC 8.0.1"
       addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,cppcheck,hscolour], sources: [hvr-ghc]}}
-
-
-
-#   fast-finish: true
-
-
-
-
 # 
-# jobs:
-#   include:
-#     - stage: build deps
-#       script: true
-#     - stage: build idris
-#     - stage: buid std libs
-#     - stage: test
-#       - env: CABALVER="1.24" GHCVER="8.0.1" STACKVER="7.14" STYLISH=YES
-#         addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,hscolour], sources: [hvr-ghc]}}
-#       - env: CABALVER="1.22" GHCVER="7.10.3" TESTS="lib_doc doc"
-#         compiler: ": #GHC 7.10.3"
-#         addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,cppcheck,hscolour], sources: [hvr-ghc]}}
-#       - env: CABALVER="1.22" GHCVER="7.10.3" TESTS="test_js"
-#         compiler: ": #GHC 7.10.3"
-#         addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,cppcheck,hscolour], sources: [hvr-ghc]}}
-#       - env: CABALVER="1.22" GHCVER="7.10.3" TESTS="test_c"
-#         compiler: ": #GHC 7.10.3"
-#         addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,cppcheck,hscolour], sources: [hvr-ghc]}}
-#       - env: CABALVER="1.24" GHCVER="8.0.1" TESTS="lib_doc doc"
-#         compiler: ": #GHC 8.0.1"
-#         addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,cppcheck,hscolour], sources: [hvr-ghc]}}
-#       - env: CABALVER="1.24" GHCVER="8.0.1" TESTS="test_js"
-#         compiler: ": #GHC 8.0.1"
-#         addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,cppcheck,hscolour], sources: [hvr-ghc]}}
-#       - env: CABALVER="1.24" GHCVER="8.0.1" TESTS="test_c"
-#         compiler: ": #GHC 8.0.1"
-#         addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,cppcheck,hscolour], sources: [hvr-ghc]}}
-
 # matrix:
 #   include:
 #     - env: CABALVER="1.24" GHCVER="8.0.1" STACKVER="7.14" STYLISH=YES
@@ -110,7 +75,6 @@ jobs:
 cache:
   directories:
     - $HOME/.cabsnap
-    - $HOME/.cabal/store
     - $HOME/.cabal/packages
     - $HOME/.stack
 
@@ -151,36 +115,34 @@ install:
               $HOME/.cabal/packages/hackage.haskell.org/00-index.tar;
     fi
   - travis_retry cabal update -v
-  - cabal new-build -f FFI lib:idris --only-dependencies --enable-tests
-  #- cabal new-build -f FFI --only-dependencies --enable-tests
   # Run build with 2 parallel jobs
   # The container environment reports 16 cores,
   # causing cabal's default configuration (jobs: $ncpus)
   # to run into the GHC #9221 bug which can result in longer build-times.
-  # - $SED -i -r 's/(^jobs:).*/\1 2/' $HOME/.cabal/config
-  # - cabal install -f FFI --only-dependencies --enable-tests --dry -v > installplan.txt
-  # - $SED -i -e '1,/^Resolving /d' installplan.txt; cat installplan.txt
+  - $SED -i -r 's/(^jobs:).*/\1 2/' $HOME/.cabal/config
+  - cabal install -f FFI --only-dependencies --enable-tests --dry -v > installplan.txt
+  - $SED -i -e '1,/^Resolving /d' installplan.txt; cat installplan.txt
   # check whether current requested install-plan matches cached package-db snapshot
-  # - if diff -u installplan.txt $HOME/.cabsnap/installplan.txt;
-    # then
-      # echo "cabal build-cache HIT";
-      # rm -rfv .ghc;
-      # cp -a $HOME/.cabsnap/ghc $HOME/.ghc;
-      # cp -a $HOME/.cabsnap/lib $HOME/.cabsnap/share $HOME/.cabsnap/bin $HOME/.cabal/;
-    # else
-      # echo "cabal build-cache MISS";
-      # rm -rf $HOME/.cabsnap;
-      # mkdir -p $HOME/.ghc $HOME/.cabal/lib $HOME/.cabal/share $HOME/.cabal/bin;
-      # cabal install -f FFI --only-dependencies --enable-tests;
-    # fi
+  - if diff -u installplan.txt $HOME/.cabsnap/installplan.txt;
+    then
+      echo "cabal build-cache HIT";
+      rm -rfv .ghc;
+      cp -a $HOME/.cabsnap/ghc $HOME/.ghc;
+      cp -a $HOME/.cabsnap/lib $HOME/.cabsnap/share $HOME/.cabsnap/bin $HOME/.cabal/;
+    else
+      echo "cabal build-cache MISS";
+      rm -rf $HOME/.cabsnap;
+      mkdir -p $HOME/.ghc $HOME/.cabal/lib $HOME/.cabal/share $HOME/.cabal/bin;
+      cabal install -f FFI --only-dependencies --enable-tests;
+    fi
   # snapshot package-db on cache miss
-  # - if [ ! -d $HOME/.cabsnap ];
-    # then
-      # echo "snapshotting package-db to build-cache";
-      # mkdir $HOME/.cabsnap;
-      # cp -a $HOME/.ghc $HOME/.cabsnap/ghc;
-      # cp -a $HOME/.cabal/lib $HOME/.cabal/share $HOME/.cabal/bin installplan.txt $HOME/.cabsnap/;
-    # fi
+  - if [ ! -d $HOME/.cabsnap ];
+    then
+      echo "snapshotting package-db to build-cache";
+      mkdir $HOME/.cabsnap;
+      cp -a $HOME/.ghc $HOME/.cabsnap/ghc;
+      cp -a $HOME/.cabal/lib $HOME/.cabal/share $HOME/.cabal/bin installplan.txt $HOME/.cabsnap/;
+    fi
 
 before_script:
   - ORIGINAL_DIR=$(pwd)
@@ -195,7 +157,7 @@ script:
   - echo -en 'travis_fold:end:script.configure\\r'
 ###
   - echo 'Build...' && echo -en 'travis_fold:start:script.build\\r'
-  - cabal new-build
+  - cabal build
   - echo -en 'travis_fold:end:script.build\\r'
 ###
   - echo 'Copy...' && echo -en 'travis_fold:start:script.copy\\r'
