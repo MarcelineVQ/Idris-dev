@@ -119,7 +119,8 @@ install:
               $HOME/.cabal/packages/hackage.haskell.org/00-index.tar;
     fi
   - travis_retry cabal update -v
-  - cabal new-build -f FFI --only-dependencies --enable-tests
+  - cabal new-build -f FFI lib:idris --only-dependencies --enable-tests
+  #- cabal new-build -f FFI --only-dependencies --enable-tests
   # Run build with 2 parallel jobs
   # The container environment reports 16 cores,
   # causing cabal's default configuration (jobs: $ncpus)
