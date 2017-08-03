@@ -22,6 +22,38 @@ jobs:
         - STACKVER="7.14"
         - STYLISH=YES
       addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,hscolour], sources: [hvr-ghc]}}
+    - stage: test
+      script: cabal new-build
+      env:
+        - CABALVER="1.24"
+        - GHCVER="8.0.1"
+        - TESTS="lib_doc doc"
+      compiler: ": #GHC 8.0.1"
+      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,cppcheck,hscolour], sources: [hvr-ghc]}}
+    - stage: test
+      script: cabal new-build
+      env:
+        - CABALVER="1.24"
+        - GHCVER="8.0.1"
+        - TESTS="test_js"
+      compiler: ": #GHC 8.0.1"
+      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,cppcheck,hscolour], sources: [hvr-ghc]}}
+    - stage: test
+      script: cabal new-build
+      env:
+        - CABALVER="1.24"
+        - GHCVER="8.0.1"
+        - TESTS="test_c"
+      compiler: ": #GHC 8.0.1"
+      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,cppcheck,hscolour], sources: [hvr-ghc]}}
+
+
+
+#   fast-finish: true
+
+
+
+
 # 
 # jobs:
 #   include:
