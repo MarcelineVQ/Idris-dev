@@ -13,10 +13,10 @@ jobs:
       script: true
       addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,hscolour], sources: [hvr-ghc]}}
     - stage: prepare idris
-      script: cabal install idris
+      script: true
       addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,hscolour], sources: [hvr-ghc]}}
     - stage: test
-      script: cabal build
+      script: true
       env:
         - CABALVER="1.24"
         - GHCVER="8.0.1"
@@ -24,7 +24,7 @@ jobs:
         - STYLISH=YES
       addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,hscolour], sources: [hvr-ghc]}}
     - stage: test
-      script: cabal build
+      script: true
       env:
         - CABALVER="1.24"
         - GHCVER="8.0.1"
@@ -32,7 +32,7 @@ jobs:
       compiler: ": #GHC 8.0.1"
       addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,cppcheck,hscolour], sources: [hvr-ghc]}}
     - stage: test
-      script: cabal build
+      script: true
       env:
         - CABALVER="1.24"
         - GHCVER="8.0.1"
@@ -40,7 +40,7 @@ jobs:
       compiler: ": #GHC 8.0.1"
       addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1,cppcheck,hscolour], sources: [hvr-ghc]}}
     - stage: test
-      script: cabal build
+      script: true
       env:
         - CABALVER="1.24"
         - GHCVER="8.0.1"
