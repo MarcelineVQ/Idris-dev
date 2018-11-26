@@ -21,6 +21,7 @@ import Idris.ElabDecls
 import Idris.Error
 import Idris.IBC
 import Idris.Info
+import Idris.Imports (dirPackages)
 import Idris.ModeCommon
 import Idris.Options
 import Idris.Output
@@ -32,6 +33,7 @@ import IRTS.CodegenCommon
 
 import Util.System
 
+import Control.Applicative (liftA2)
 import Control.Category
 import Control.DeepSeq
 import Control.Monad
@@ -75,6 +77,7 @@ idrisMain opts =
        let ibcsubdir = opt getIBCSubDir opts
        let importdirs = opt getImportDir opts
        let sourcedirs = opt getSourceDir opts
+       let packageincdirs = opt getPackageIncDir opts
        setSourceDirs sourcedirs
        let bcs = opt getBC opts
        let pkgdirs = opt getPkgDir opts
@@ -141,9 +144,16 @@ idrisMain opts =
        setNoBanner nobanner
 
        -- Check if listed packages are actually installed
+       ilibdir <- runIO $ getIdrisLibDir
+       ipkgs <- runIO $ getIdrisInstalledPackages
 
-       idrisCatch (do ipkgs <- runIO $ getIdrisInstalledPackages
-                      let diff_pkgs = (\\) pkgdirs ipkgs
+       idrisCatch (do extrapkgs <- runIO $ mapM dirPackages packageincdirs
+                      let diff_pkgs = (\\) pkgdirs (ipkgs ++ concat extrapkgs)
+                      -- runIO $ print ilibdir
+                      -- runIO $ print packagedirs
+                      -- runIO $ print ipkgs
+                      -- runIO $ print extrapkgs
+                      -- runIO $ print diff_pkgs
 
                       when (not $ null diff_pkgs) $ do
                         iputStrLn "The following packages were specified but cannot be found:"
@@ -152,10 +162,13 @@ idrisMain opts =
                   (\e -> return ())
 
        when (not (NoBasePkgs `elem` opts)) $ do
-           addPkgDir "prelude"
-           addPkgDir "base"
+           addPkgDir ilibdir "prelude"
+           addPkgDir ilibdir "base"
 
-       mapM_ addPkgDir pkgdirs
+
+       -- Make our package include directories visible, custom ones come first
+       -- so that installed libs can be overridden.
+       sequence $ liftA2 addPkgDir (packageincdirs ++ [ilibdir]) pkgdirs
        elabPrims
        when (not (NoBuiltins `elem` opts)) $ do x <- loadModule "Builtins" (IBC_REPL False)
                                                 addAutoImport "Builtins"
@@ -244,10 +257,9 @@ idrisMain opts =
     processOptimisation (True,  p) = addOptimise p
     processOptimisation (False, p) = removeOptimise p
 
-    addPkgDir :: String -> Idris ()
-    addPkgDir p = do ddir <- runIO getIdrisLibDir
-                     addImportDir (ddir </> p)
-                     addIBC (IBCImportDir (ddir </> p))
+    addPkgDir :: String -> String -> Idris ()
+    addPkgDir path p = do addImportDir (path </> p)
+                          addIBC (IBCImportDir (path </> p))
 
 
 

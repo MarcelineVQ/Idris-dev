@@ -15,7 +15,8 @@ module Idris.Options (Codegen(..), ConsoleWidth(..), HowMuchDocs(..), IRFormat(.
                       getLanguageExt, getOptLevel, getOptimisation, getOutput,
                       getOutputTy, getPkg, getPkgCheck, getPkgClean, getPkgDir,
                       getPkgIndex, getPkgMkDoc, getPkgREPL, getPkgTest, getPort,
-                      getSourceDir, loggingCatsStr, opt, parserCats, strLogCat) where
+                      getSourceDir, loggingCatsStr, opt, parserCats, strLogCat,
+                      getPackageIncDir) where
 
 import Data.Maybe
 import GHC.Generics (Generic)
@@ -61,6 +62,7 @@ data Opt = Filename String
          | IBCSubDir String
          | ImportDir String
          | SourceDir String
+         | PackageIncDir String
          | PkgBuild String
          | PkgInstall String
          | PkgClean String
@@ -189,6 +191,11 @@ getImportDir _ = Nothing
 getSourceDir :: Opt -> Maybe String
 getSourceDir (SourceDir s) = Just s
 getSourceDir _ = Nothing
+
+-- extra non-installed packages
+getPackageIncDir :: Opt -> Maybe String
+getPackageIncDir (PackageIncDir s) = Just s
+getPackageIncDir _ = Nothing
 
 getPkgDir :: Opt -> Maybe String
 getPkgDir (Pkg s) = Just s

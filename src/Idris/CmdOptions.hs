@@ -139,14 +139,15 @@ parseFlags = many $
   <|> flag' (Verbose 2) (long "V1" <> help "Louder verbosity")
   <|> flag' (Verbose 1) (short 'V' <> long "V0" <>long "verbose" <> help "Loud verbosity")
 
-  <|> IBCSubDir <$> strOption (long "ibcsubdir" <> metavar "FILE" <> help "Write IBC files into sub directory")
-  <|> ImportDir <$> strOption (short 'i' <> long "idrispath" <> help "Add directory to the list of import paths")
-  <|> SourceDir <$> strOption (long "sourcepath" <> help "Add directory to the list of source search paths")
+  <|> IBCSubDir  <$> strOption (long "ibcsubdir" <> metavar "FILE" <> help "Write IBC files into sub directory")
+  <|> ImportDir  <$> strOption (short 'i' <> long "idrispath" <> help "Add directory to the list of import paths")
+  <|> SourceDir  <$> strOption (long "sourcepath" <> help "Add directory to the list of installed package search paths")
+  <|> PackageIncDir <$> strOption (short 'P' <> long "include-package" <> help "Add an absolute directiory to the list of installed packages")
 
   <|> flag' WarnOnly (long "warn")
 
-  <|> Pkg  <$> strOption (short 'p' <> long "package" <> help "Add package as a dependency")
-  <|> Port <$> option portReader (long "port" <> metavar "PORT" <> help "REPL TCP port - pass \"none\" to not bind any port")
+  <|> Pkg      <$> strOption (short 'p' <> long "package" <> help "Add package as a dependency")
+  <|> Port     <$> option portReader (long "port" <> metavar "PORT" <> help "REPL TCP port - pass \"none\" to not bind any port")
 
   -- Package commands
   <|> PkgBuild   <$> strOption (long "build"    <> metavar "IPKG" <> help "Build package")

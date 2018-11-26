@@ -503,6 +503,7 @@ mergeOptions copts popts =
     chkOpt o@(WarnReach)      = Right o
     chkOpt o@(IBCSubDir _)    = Right o
     chkOpt o@(ImportDir _ )   = Right o
+    chkOpt o@(PackageDir _ )   = Right o
     chkOpt o@(UseCodegen _)   = Right o
     chkOpt o@(Verbose _)      = Right o
     chkOpt o@(AuditIPkg)      = Right o
@@ -516,7 +517,7 @@ mergeOptions copts popts =
         , "\t--log <lvl>, --total, --warnpartial, --warnreach, --warnipkg"
         , "\t--ibcsubdir <path>, -i --idrispath <path>"
         , "\t--logging-categories <cats>"
-        , "\t--highlight"
+        , "\t--highlight, -P --include-package"
         , "\nThe options need removing are:"
         , unlines es
         ]

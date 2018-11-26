@@ -7,7 +7,7 @@ Maintainer  : The Idris Community.
 -}
 module Idris.Imports(
     IFileType(..), findIBC, findImport, findInPath, findPkgIndex
-  , ibcPathNoFallback, installedPackages, pkgIndex
+  , ibcPathNoFallback, installedPackages, pkgIndex, dirPackages
   , PkgName, pkgName, unPkgName, unInitializedPkgName
   ) where
 
@@ -92,6 +92,7 @@ ibcPathNoFallback ibcsd fp = ibcPath ibcsd True fp
 findImport :: [FilePath] -> FilePath -> FilePath -> Idris IFileType
 findImport []     ibcsd fp = ierror . Msg $ "Can't find import " ++ fp
 findImport (d:ds) ibcsd fp = do let fp_full = d </> fp
+                                -- runIO $ print fp_full
                                 ibcp <- runIO $ ibcPathWithFallback ibcsd fp_full
                                 let idrp = srcPath fp_full
                                 let lidrp = lsrcPath fp_full
@@ -131,11 +132,9 @@ findPkgIndex p = do let idx = pkgIndex p
                     ids <- allImportDirs
                     runIO $ findInPath ids idx
 
-
-installedPackages :: IO [String]
-installedPackages = do
-  idir <- getIdrisLibDir
-  filterM (goodDir idir) =<< dirContents idir
+dirPackages :: FilePath -> IO [String]
+dirPackages path = do
+  filterM (goodDir path) =<< dirContents path
   where
   allFilesInDir base fp = do
     let fullpath = base </> fp
@@ -144,7 +143,10 @@ installedPackages = do
       then fmap concat (mapM (allFilesInDir fullpath) =<< dirContents fullpath)
       else return [fp]
   dirContents = fmap (filter (not . (`elem` [".", ".."]))) . getDirectoryContents
-  goodDir idir d = any (".ibc" `isSuffixOf`) <$> allFilesInDir idir d
+  goodDir dir d = any (".ibc" `isSuffixOf`) <$> allFilesInDir dir d
+
+installedPackages :: IO [String]
+installedPackages = getIdrisLibDir >>= dirPackages
 
 
 -- | Case sensitive file existence check for Mac OS X.
