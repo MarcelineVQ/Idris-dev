@@ -149,11 +149,6 @@ idrisMain opts =
 
        idrisCatch (do extrapkgs <- runIO $ mapM dirPackages packageincdirs
                       let diff_pkgs = (\\) pkgdirs (ipkgs ++ concat extrapkgs)
-                      -- runIO $ print ilibdir
-                      -- runIO $ print packagedirs
-                      -- runIO $ print ipkgs
-                      -- runIO $ print extrapkgs
-                      -- runIO $ print diff_pkgs
 
                       when (not $ null diff_pkgs) $ do
                         iputStrLn "The following packages were specified but cannot be found:"

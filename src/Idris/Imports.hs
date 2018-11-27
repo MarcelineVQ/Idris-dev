@@ -92,7 +92,6 @@ ibcPathNoFallback ibcsd fp = ibcPath ibcsd True fp
 findImport :: [FilePath] -> FilePath -> FilePath -> Idris IFileType
 findImport []     ibcsd fp = ierror . Msg $ "Can't find import " ++ fp
 findImport (d:ds) ibcsd fp = do let fp_full = d </> fp
-                                -- runIO $ print fp_full
                                 ibcp <- runIO $ ibcPathWithFallback ibcsd fp_full
                                 let idrp = srcPath fp_full
                                 let lidrp = lsrcPath fp_full
