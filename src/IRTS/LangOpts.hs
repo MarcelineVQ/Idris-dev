@@ -9,6 +9,8 @@ Maintainer  : The Idris Community.
 
 module IRTS.LangOpts(inlineAll) where
 
+import Debug.Trace
+
 import Idris.Core.CaseTree
 import Idris.Core.TT
 import IRTS.Lang
@@ -238,14 +240,14 @@ caseFloat exp = exp
 
 -- Case of constructor
 conOpt :: LExp -> LExp
-conOpt (LCase ct (LCon _ t n args) alts)
+conOpt z@(LCase ct (LCon _ t n args) alts)
     = pickAlt n args alts
   where
     pickAlt n args (LConCase i n' es rhs : as) | n == n'
         = substAll (zip es args) rhs
     pickAlt _ _ (LDefaultCase rhs : as) = rhs
     pickAlt n args (_ : as) = pickAlt n args as
-    pickAlt n args [] = error "Can't happen pickAlt - impossible case found"
+    pickAlt n args [] = traceShow z z -- (error "Can't happen pickAlt - impossible case found")
 
     substAll [] rhs = rhs
     substAll ((n, tm) : ss) rhs = lsubst n tm (substAll ss rhs)
@@ -324,4 +326,3 @@ eta (LCon a t n es) = LCon a t n (map eta es)
 eta (LCase ct e alts) = LCase ct (eta e) (map (fmap eta) alts)
 eta (LOp f es) = LOp f (map eta es)
 eta tm = tm
-

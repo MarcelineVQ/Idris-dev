@@ -1,5 +1,7 @@
 module ReadInt
 
+import Data.Vect
+
 import Effects
 import Effect.State
 import Effect.StdIO
@@ -9,9 +11,9 @@ readInt : { [STATE (Vect n Int), STDIO] ==>
                        else [STATE (Vect n Int), STDIO] } Eff Bool
 readInt = do let x = trim !getStr
              case all isDigit (unpack x) of
-                  False => pure False
-                  True => do updateM (\xs => cast x ::xs)
-                             pure True
+                 False => pure False
+                 True => do updateM (\xs => cast x ::xs)
+                            pureM True
 
 readN : (n : Nat) ->
         { [STATE (Vect m Int), STDIO] ==>
